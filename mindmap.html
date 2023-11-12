@@ -118,6 +118,9 @@ body {
   & div {
     text-align: center;
   }
+  &[data-parent=""] div[name="data"] {
+    font-weight: bold;
+  }
 }
 .mind-tbox {
   border: none;
@@ -144,9 +147,16 @@ body {
   border-width: 1px;
   border-collapse: collapse;
   background-color: white;
+  &.is-root {
+    background-color: #444;
+    color: white;
+  }
   color: blue;
   &:hover {
     background-color: blue;
+    &.is-root {
+      background-color: #444;
+    }
     color: white;
     cursor: pointer;
   }
@@ -171,7 +181,7 @@ body {
   border-top-left-radius: 0.4rem;
   border-top-right-radius: 0.4rem;
   align-items: center;
-  &+form {
+  &+form, &+div {
     background-color: white;
     border-left: black 1px solid;
     border-right: black 1px solid;
@@ -202,11 +212,6 @@ body {
   white-space: nowrap;
 }
 
-.root-node {
-  top: 5rem;
-  left: 10rem;
-}
-
 #lock-screen {
   background-color: black;
   opacity: 40%;
@@ -227,7 +232,7 @@ body {
 <div id="foreground" class="abs wh-full" style="background-color: transparent">
   <!-- node -->
   <span id="child_minds"></span>
-  <div class="flex mind root-node" id="m0" data-parent="">
+  <div class="flex mind" id="m0" data-parent="" style="top: 5rem; left:10rem;">
     <div name="data" class="grow w-fit truncate">Mind Map</div>
   </div>
   <!-- sub menu -->
@@ -254,6 +259,21 @@ body {
     </div>
   </form>
 </div>
+<!-- [[ delete-confirm dialog ]] -->
+<div id="del-confirm" class="abs fcol w-fit hidden">
+  <div class="flex w-full ttlbar jus-bw">
+    <div>Confirm</div>
+    <div><button type="button" id="close-confirm">✕</button></div>
+  </div>
+  <div class="flex fcol w-full">
+    <div class="grow" id="confirm-msg" style="padding: 1rem;">Delete mind. Are you ready ?</div>
+    <div class="flex w-full jus-center" style="padding-bottom: 1rem;">
+      <button type="button" id="del-ok" style="width: 4rem;">Yes</button>
+      <div name="spacer" style="width: 2rem;"></div>
+      <button type="button" id="del-ng" style="width: 4rem;">No</button>
+    </div>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -264,11 +284,12 @@ body {
   const foreground = document.getElementById('foreground');
   const lock_screen = document.getElementById('lock-screen');
   const input_dialog = document.getElementById('input-dialog');
+  const del_confirm = document.getElementById('del-confirm');
   /**
    * マウスまわりの処理
    */
   const clickPos = {x: null, y:null};
-  document.addEventListener('mousedown', function(ev) {
+  foreground.addEventListener('mousedown', function(ev) {
     clickPos.x = ev.pageX;
     clickPos.y = ev.pageY;
     const mind = ev.target.closest('.mind');
@@ -277,8 +298,8 @@ body {
       mind.classList.add('dragging');
       mind.setAttribute('px', ev.pageX - mind.offsetLeft);
       mind.setAttribute('py', ev.pageY - mind.offsetTop);
-      document.addEventListener("mouseup", mouseUp);
-      document.addEventListener("mousemove", mouseMove);
+      foreground.addEventListener("mouseup", mouseUp);
+      foreground.addEventListener("mousemove", mouseMove);
 
       const allMind = foreground.querySelectorAll('.mind');
       for (const m of allMind) {
@@ -296,7 +317,7 @@ body {
       target.style.left = `${ev.pageX - x}px`;
       target.style.top = `${ev.pageY - y}px`;
       lineReset(target); // リアルタイムに関係線を引き直す（モダンブラウザなら重くないはず？）
-      document.addEventListener("mouseleave", mouseUp);
+      foreground.addEventListener("mouseleave", mouseUp);
       menu.classList.add('hidden');
       ev.preventDefault();
     }
@@ -306,9 +327,9 @@ body {
     const target = foreground.querySelector('.dragging');
     if (target != null) {
       // lineReset(target);
-      document.removeEventListener("mouseMove", mouseUp);
-      document.removeEventListener("mouseleave", mouseUp);
-      document.removeEventListener("mouseUp", mouseUp);
+      foreground.removeEventListener("mouseMove", mouseUp);
+      foreground.removeEventListener("mouseleave", mouseUp);
+      foreground.removeEventListener("mouseUp", mouseUp);
       target.classList.remove('dragging');
     }
     const delta = ((ev.pageX - clickPos.x) ** 2) + ((ev.pageY - clickPos.y) ** 2);
@@ -333,6 +354,12 @@ body {
         } else {
           menu.style.top = `${mind.offsetTop - moh - 1}px`;
         }
+        const mdl = menu.querySelector('#btn_del');
+        if (mind.getAttribute('data-parent') == '') {
+          mdl.classList.add('is-root');
+        } else {
+          mdl.classList.remove('is-root');
+        }
         menu.style.left = `${mind.offsetLeft}px`;
         menu.setAttribute('data-trigger', mind.getAttribute('id'));
         menu.classList.remove('hidden');
@@ -343,6 +370,10 @@ body {
       if (elm.classList.contains('menu-btn')) {
         switch (elm.textContent) {
           case 'Del':
+            if (!elm.classList.contains('is-root')) {
+              delMind(mind, menu.offsetLeft + elm.offsetLeft, menu.offsetTop + elm.offsetTop);
+              menu.classList.add('hidden');
+            }
             break;
           case 'Color':
             changeColor(mind);
@@ -484,6 +515,51 @@ body {
     lock_screen.removeEventListener('click', lockRelease);
     lock_screen.classList.add('hidden');
   }
+
+  /**
+   * マインドを削除する
+   */
+  del_confirm.querySelector('#del-ok').addEventListener("click", delOK);
+  del_confirm.querySelector('#del-ng').addEventListener("click", delNG);
+  del_confirm.querySelector('#close-confirm').addEventListener("click", delNG);
+  function delMind(mind, x, y) {
+    lock();
+    const posX = Math.min(x, foreground.offsetWidth - del_confirm.offsetWidth);
+    const posY = Math.min(y, foreground.offsetHeight - del_confirm.offsetHeight);
+    del_confirm.style.left = `${posX}px`;
+    del_confirm.style.top = `${posY}px`;
+    del_confirm.classList.remove('hidden');
+  }
+  function delOK() {
+    const mind = foreground.querySelector('.mind.selected');
+    const nid = mind.getAttribute('id');
+    const pid = mind.getAttribute('data-parent');
+    const pMind = foreground.querySelector(`[id=${pid}]`);
+    // 関係の差し替え
+    const targetMinds = foreground.querySelectorAll(`[data-parent="${nid}"]`);
+    for (const m of targetMinds) {
+      m.setAttribute('data-parent', pid);
+    }
+    background.querySelectorAll(`[id$="-${nid}"]`).forEach(function(line) {
+      line.remove();
+    });
+    background.querySelectorAll(`[id^="${nid}-"]`).forEach(function(line) {
+      const toId = line.getAttribute('id').split('-')[1];
+      line.setAttribute('id', `${pid}-${toId}`);
+      reLine(line, getRelationPoint(pMind, foreground.querySelector(`[id=${toId}]`)));
+    });
+    mind.remove();
+    pMind.classList.add('selected');
+    closeDelCon();
+  }
+  function delNG() {
+    closeDelCon();
+  }
+  function closeDelCon() {
+    del_confirm.classList.add('hidden');
+    lockRelease();
+  }
+
 })();
 </script>
 </body>
