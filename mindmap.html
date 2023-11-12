@@ -23,6 +23,9 @@ body {
 .w-full {
   width: 100%;
 }
+.w-80 {
+  width: 80%;
+}
 .h-full {
   height: 100%;
 }
@@ -58,6 +61,9 @@ body {
 .pr-2 {
   padding-right: 0.5rem;
 }
+.pl-2 {
+  padding-left: 0.5rem;
+}
 
 /* flex */
 .flex {
@@ -75,6 +81,9 @@ body {
 }
 .jus-bw {
   justify-content: space-between;
+}
+.jus-center {
+  justify-content: center;
 }
 
 /* application */
@@ -110,6 +119,16 @@ body {
     text-align: center;
   }
 }
+.mind-tbox {
+  border: none;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  background-color: transparent;
+  color: blue;
+  outline: none;
+}
 
 /* menu button */
 .menu-btn {
@@ -141,6 +160,31 @@ body {
   }
 }
 
+.ttlbar {
+  user-select: none;
+  color: white;
+  background-color: blue;
+  font-weight: bold;
+  padding-left: 0.5rem;
+  padding-right: 0.2rem;
+  border: black 1px solid;
+  border-top-left-radius: 0.4rem;
+  border-top-right-radius: 0.4rem;
+  align-items: center;
+  &+form {
+    background-color: white;
+    border-left: black 1px solid;
+    border-right: black 1px solid;
+    border-bottom: black 1px solid;
+    border-bottom-left-radius: 0.4rem;
+    border-bottom-right-radius: 0.4rem;
+  }
+  & button {
+    border-radius: 0.4rem;
+    font-size: 0.75rem;
+  }
+}
+
 .rel-line {
   margin: 0;
   padding: 0;
@@ -168,11 +212,6 @@ body {
   opacity: 40%;
 }
 
-.line-a { /* \ */
-  background: linear-gradient(7deg,#fff 0%,#fff 49%,#444 49%,#444 51%,#fff 51%,#fff 100%);
-}
-.line-b { /* / */
-}
 </style>
 
 </head>
@@ -202,13 +241,19 @@ body {
   </span>
 </div>
 <!-- [[ lock Layer ]] -->
-<div id="lock-screen" class="abs wh-full none">
-<!-- [[ input form layer ]] -->
-<form action="#" id="input_form" class="abs hidden">
-  <div id="input_form" class="flex w-fit">
-    <input type="text" maxlength=80 class="truncate">
+<div id="lock-screen" class="abs wh-full hidden"></div>
+<!-- [[ input form ]] -->
+<div id="input-dialog" class="abs fcol w-fit hidden">
+  <div class="flex w-full ttlbar jus-bw">
+    <div>Edit content</div>
+    <div><button type="button" id="close-edit">✕</button></div>
   </div>
-</form>
+  <form action="#" class="m-0 p-0">
+    <div class="flex w-full">
+      <input type="text" length=60 maxlength=120 class="grow truncate mind-tbox">
+    </div>
+  </form>
+</div>
 
 <script>
 (function(){
@@ -217,6 +262,8 @@ body {
   const menu = document.getElementById('submenu');
   const background = document.getElementById('background');
   const foreground = document.getElementById('foreground');
+  const lock_screen = document.getElementById('lock-screen');
+  const input_dialog = document.getElementById('input-dialog');
   /**
    * マウスまわりの処理
    */
@@ -248,7 +295,7 @@ body {
       const y = (target.getAttribute('py') ?? 0) - 0;
       target.style.left = `${ev.pageX - x}px`;
       target.style.top = `${ev.pageY - y}px`;
-      lineReset(target); // リアルタイムに関係線を引き直す（重くないはず？ V8パワーを見せてくれ！）
+      lineReset(target); // リアルタイムに関係線を引き直す（モダンブラウザなら重くないはず？）
       document.addEventListener("mouseleave", mouseUp);
       menu.classList.add('hidden');
       ev.preventDefault();
@@ -270,15 +317,14 @@ body {
     }
   }
   function clickAction(ev) {
-    menuAction(ev);
+    menuAction(ev.target);
   }
   /**
    * メニュー処理
    */
-  function menuAction(ev) {
-    const elm = ev.target;
-    const mind = elm.closest('.mind');
+  function menuAction(elm) {
     if (menu.classList.contains('hidden')) {
+      const mind = elm.closest('.mind');
       // メニューが非表示でマインドクリック時はメニュー表示
       if (mind != null) {
         const moh = menu.offsetHeight;
@@ -288,12 +334,13 @@ body {
           menu.style.top = `${mind.offsetTop - moh - 1}px`;
         }
         menu.style.left = `${mind.offsetLeft}px`;
+        menu.setAttribute('data-trigger', mind.getAttribute('id'));
         menu.classList.remove('hidden');
       }
     } else {
+      const mind = foreground.querySelector('.mind.selected');
       // メニュー表示中はメニューをクリックされたのかそれ以外かで処理を分ける
       if (elm.classList.contains('menu-btn')) {
-        const mind = foreground.querySelector('.selected');
         switch (elm.textContent) {
           case 'Del':
             break;
@@ -301,19 +348,23 @@ body {
             changeColor(mind);
             break;
           case 'New':
-            newMind(mind);
+            const nMind = newMind(mind);
             mind.classList.remove('selected');
             menu.classList.add('hidden');
+            menuAction(nMind);
             break;
           case 'Edit':
+            editMind(mind, menu.offsetLeft + elm.offsetLeft, menu.offsetTop + elm.offsetTop);
+            menu.classList.add('hidden');
             break;
         }
       } else {
         menu.classList.add('hidden');
         // 別のマインドをクリックしている場合は、そこにメニュー表示
-        if (mind != null) {
+        const evMind = elm.closest('.mind');
+        if (evMind != null && evMind.getAttribute('id') !== menu.getAttribute('data-trigger')) {
           setTimeout(function() {
-            menuAction(ev);
+            menuAction(elm);
           },10);
         }
       }
@@ -344,6 +395,7 @@ body {
     nMind.querySelector('[name="data"]').textContent = 'new mind.';
     foreground.querySelector('#child_minds').appendChild(nMind);
     liner(mind, nMind);
+    return nMind;
   }
 
   /**
@@ -398,6 +450,40 @@ body {
     return {a: a, b: b, deg: deg, len:dd};
   }
 
+  /**
+   * マインド編集
+   */
+  function editMind(mind, x, y) {
+    lock();
+    const text_box = input_dialog.querySelector('.mind-tbox');
+    text_box.value = mind.querySelector('[name="data"]').textContent;
+    const posX = Math.min(x, foreground.offsetWidth - input_dialog.offsetWidth);
+    const posY = Math.min(y, foreground.offsetHeight - input_dialog.offsetHeight);
+    input_dialog.style.left = `${posX}px`;
+    input_dialog.style.top = `${posY}px`;
+    input_dialog.classList.remove('hidden');
+    text_box.focus();
+  }
+  function closeEditMind() {
+    input_dialog.classList.add('hidden');
+    lockRelease();
+  }
+  input_dialog.querySelector('form').addEventListener("submit", submitMind);
+  input_dialog.querySelector('#close-edit').addEventListener("click", closeEditMind);
+  function submitMind(ev) {
+    ev.preventDefault();
+    const mind = foreground.querySelector('.selected');
+    const text = input_dialog.querySelector('.mind-tbox').value;
+    mind.querySelector('[name="data"]').textContent = (text != '') ? text : '(´・ω・｀)';
+    closeEditMind();
+  }
+  function lock() {
+    lock_screen.classList.remove('hidden');
+  }
+  function lockRelease(ev) {
+    lock_screen.removeEventListener('click', lockRelease);
+    lock_screen.classList.add('hidden');
+  }
 })();
 </script>
 </body>
