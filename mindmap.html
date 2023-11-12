@@ -331,6 +331,7 @@ body {
       foreground.removeEventListener("mouseleave", mouseUp);
       foreground.removeEventListener("mouseUp", mouseUp);
       target.classList.remove('dragging');
+      save(true);
     }
     const delta = ((ev.pageX - clickPos.x) ** 2) + ((ev.pageY - clickPos.y) ** 2);
     if (delta < 4) {
@@ -382,6 +383,7 @@ body {
             const nMind = newMind(mind);
             mind.classList.remove('selected');
             menu.classList.add('hidden');
+            save();
             menuAction(nMind);
             break;
           case 'Edit':
@@ -414,6 +416,7 @@ body {
       }
     }
     mind.classList.add(`bg-${(colIdx + 1) % 8}`);
+    save();
   }
   /**
    * 新しいマインドを生み出す
@@ -506,13 +509,13 @@ body {
     const mind = foreground.querySelector('.selected');
     const text = input_dialog.querySelector('.mind-tbox').value;
     mind.querySelector('[name="data"]').textContent = (text != '') ? text : '(´・ω・｀)';
+    save();
     closeEditMind();
   }
   function lock() {
     lock_screen.classList.remove('hidden');
   }
   function lockRelease(ev) {
-    lock_screen.removeEventListener('click', lockRelease);
     lock_screen.classList.add('hidden');
   }
 
@@ -560,6 +563,137 @@ body {
     lockRelease();
   }
 
+  /**
+   * save & load function.
+   */
+  function query(request) {
+    return new Promise(function(resolve, reject) {
+      request.onsuccess = function(ev) {
+        resolve(ev.target.result);
+      }
+      request.onerror = function(ev) {
+        reject(ev);
+      }
+    });
+  }
+  function save() {
+    const req = indexedDB.open('mindmap', 1); // needless version management for me.
+    req.onupgradeneeded = function(ev) {
+      const db = ev.target.result;
+      const store = db.createObjectStore("savedata", { keyPath: "key" });
+    };
+    req.onsuccess = function(ev) {
+      const db = ev.target.result;
+      const tran = db.transaction(["savedata"], "readwrite");
+      tran.onerror = function(ev) {
+        console.error(ev);
+      };
+      tran.oncomplete = function(ev) {
+        console.log('save ok.');
+      };
+      const store = tran.objectStore("savedata");
+      // get DOM data
+      const lineHTML = JSON.stringify(document.getElementById('lines').innerHTML);
+      const mindHTML = JSON.stringify(document.getElementById('child_minds').innerHTML);
+      const rootMind = document.getElementById('m0');
+      // save data
+      query(store.put({
+        key: 'lines',
+        data: lineHTML,
+      }))
+      .then(query(store.put({
+        key: 'minds',
+        data: mindHTML,
+      })))
+      .then(query(store.put({
+        key: 'root',
+        data: JSON.stringify({
+          class: rootMind.classList.value,
+          style: {top: rootMind.style.top, left: rootMind.style.left},
+          text: rootMind.querySelector('[name="data"]').textContent,
+        }),
+      })))
+      .catch(function(r) {
+        console.error(r);
+      })
+      ;
+    };
+    req.onerror = function(e) {
+      console.error(e);
+    };
+  }
+  function load() {
+    lock();
+    const req = indexedDB.open('mindmap', 1); // needless version management for me.
+    const loadData = {
+      lines: null,
+      minds: null,
+      root: null,
+    };
+    req.onupgradeneeded = function(ev) {
+      const db = ev.target.result;
+      const store = db.createObjectStore("savedata", { keyPath: "key" });
+    };
+    req.onsuccess = function(ev) {
+      const db = ev.target.result;
+      const tran = db.transaction(["savedata"], "readonly");
+      tran.onerror = function(ev) {
+        console.error(ev);
+        lockRelease();
+      };
+      tran.oncomplete = function(ev) {
+        console.log('load ok.');
+        if (loadData.lines != null) {
+          document.getElementById('lines').innerHTML = loadData.lines;
+        }
+        if (loadData.lines != null) {
+          document.getElementById('child_minds').innerHTML = loadData.minds;
+        }
+        if (loadData.root != null) {
+          const rootMind = document.getElementById('m0');
+          rootMind.style.top = loadData.root.style.top;
+          rootMind.style.left = loadData.root.style.left;
+          loadData.root.class.split(' ').forEach(function(c) {
+            rootMind.classList.add(c);
+          });
+          rootMind.querySelector('[name="data"]').textContent = loadData.root.text;
+        }
+        setTimeout(function() {
+          lockRelease();
+        },500);
+      };
+      const store = tran.objectStore("savedata");
+      // load data
+      query(store.get('lines'))
+      .then(function(res) {
+        if (res != null) {
+          loadData.lines = JSON.parse(res.data);
+        }
+        return query(store.get('minds'));
+      })
+      .then(function(res) {
+        if (res != null) {
+          loadData.minds = JSON.parse(res.data);
+        }
+        return query(store.get('root'));
+      })
+      .then(function(res) {
+        if (res != null) {
+          loadData.root = JSON.parse(res.data);
+        }
+        return Promise.resolve();
+      })
+      .catch(function(r) {
+        console.error(r);
+      })
+      ;
+    };
+    req.onerror = function(e) {
+      console.error(e);
+      lockRelease();
+    };
+  }
+  load();
 })();
 </script>
 </body>
