@@ -1,2 +1,2 @@
 # mindmap
-javascript base mindmap tool.
+javascript base mind mapping tool.
