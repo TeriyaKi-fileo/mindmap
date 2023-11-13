@@ -289,17 +289,33 @@ body {
    * マウスまわりの処理
    */
   const clickPos = {x: null, y:null};
-  foreground.addEventListener('mousedown', function(ev) {
+  ['mousedown', 'touchstart'].forEach(function(action) {
+    foreground.addEventListener(action, mouseDown);
+  });
+  let untouchable = true;
+  function mouseDown(evnt) {
+    const isMouse = (evnt.type == 'mousedown');
+    if (evnt.type == 'touchstart') {
+      untouchable = false;
+    }
+    if (isMouse && !untouchable) {
+      return;
+    }
+    const ev = isMouse ? evnt : evnt.changedTouches[0];
     clickPos.x = ev.pageX;
     clickPos.y = ev.pageY;
+
+    foreground.addEventListener("mouseup", mouseUp);
+    foreground.addEventListener("mousemove", mouseMove);
+    foreground.addEventListener("touchend", mouseUp);
+    foreground.addEventListener("touchmove", mouseMove);
+        
     const mind = ev.target.closest('.mind');
     // menu
     if (mind != null) {
       mind.classList.add('dragging');
       mind.setAttribute('px', ev.pageX - mind.offsetLeft);
       mind.setAttribute('py', ev.pageY - mind.offsetTop);
-      foreground.addEventListener("mouseup", mouseUp);
-      foreground.addEventListener("mousemove", mouseMove);
 
       const allMind = foreground.querySelectorAll('.mind');
       for (const m of allMind) {
@@ -307,9 +323,13 @@ body {
       }
       mind.classList.add('selected');
     }
-  });
-  function mouseMove(ev) {
+  }
+  function mouseMove(evnt) {
+    const ev = (evnt.type === 'mousemove') ? evnt : evnt.changedTouches[0];
     const target = foreground.querySelector('.dragging');
+    foreground.addEventListener("mouseleave", mouseUp);
+    foreground.addEventListener("touchleave", mouseUp);
+
     if (target != null) {
       root.style.setProperty('--curtype', 'grabbing');
       const x = (target.getAttribute('px') ?? 0) - 0;
@@ -317,19 +337,24 @@ body {
       target.style.left = `${ev.pageX - x}px`;
       target.style.top = `${ev.pageY - y}px`;
       lineReset(target); // リアルタイムに関係線を引き直す（モダンブラウザなら重くないはず？）
-      foreground.addEventListener("mouseleave", mouseUp);
+
       menu.classList.add('hidden');
-      ev.preventDefault();
+      evnt.preventDefault();
     }
   }
-  function mouseUp(ev) {
+  function mouseUp(evnt) {
+    const ev = (evnt.type === 'mouseup' || evnt.type === 'mouseleave') ? evnt : evnt.changedTouches[0];
+    foreground.removeEventListener("mouseleave", mouseUp);
+    foreground.removeEventListener("touchleave", mouseUp);
+    foreground.removeEventListener("mousemove", mouseMove);
+    foreground.removeEventListener("mouseup", mouseUp);
+    foreground.removeEventListener("touchmove", mouseMove);
+    foreground.removeEventListener("touchend", mouseUp);
+
     root.style.setProperty('--curtype', 'pointer');
     const target = foreground.querySelector('.dragging');
     if (target != null) {
       // lineReset(target);
-      foreground.removeEventListener("mouseMove", mouseUp);
-      foreground.removeEventListener("mouseleave", mouseUp);
-      foreground.removeEventListener("mouseUp", mouseUp);
       target.classList.remove('dragging');
       save(true);
     }
