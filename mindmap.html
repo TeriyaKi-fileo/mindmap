@@ -135,8 +135,7 @@ body {
 }
 
 /* menu button */
-.menu-btn {
-  width: 8rem;
+.menu-btn,.sub-btn {
   margin: 0;
   padding: 0.25rem;
   font-weight: bold;
@@ -148,11 +147,10 @@ body {
   border-width: 1px;
   border-collapse: collapse;
   background-color: white;
-  &.is-root {
-    background-color: #444;
-    color: white;
-  }
   color: blue;
+}
+.menu-btn {
+  width: 8rem;
   &:hover {
     background-color: blue;
     &.is-root {
@@ -168,6 +166,32 @@ body {
   &:last-child {
     border-bottom-left-radius: 0.8rem;
     border-bottom-right-radius: 0.8rem;
+  }
+}
+.sub-btn {
+  width: 8rem;
+  & svg {
+    width: 45%;
+  }
+  &.is-root {
+    background-color: #444;
+  }
+  &:hover {
+    background-color: blue;
+    &.is-root {
+      background-color: #444;
+    }
+  }
+  &:last-child {
+    border-bottom-left-radius: 0.8rem;
+    border-bottom-right-radius: 0.8rem;
+  }
+}
+.confirm-svg-div {
+  width: 8rem;
+  text-align: center;
+  & svg {
+    width: 45%;
   }
 }
 
@@ -238,11 +262,49 @@ body {
   </div>
   <!-- sub menu -->
   <span class="abs hidden" id="submenu">
-    <div class="flex fcol w-fit r-col">
+    <div class="flex fcol w-fit">
       <div class="menu-btn" id="btn_del">Del</div>
       <div class="menu-btn" id="btn_col">Color</div>
       <div class="menu-btn" id="btn_new">New</div>
       <div class="menu-btn" id="btn_edt">Edit</div>
+    </div>
+  </span>
+  <!-- sub sub menu -->
+  <span class="abs hidden" id="subsub">
+    <div class="flex fcol w-fit">
+      <div class="sub-btn t-self">
+        <svg viewBox="0 0 88 31" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="16" r="6" stroke="black" fill="transparent" stroke-width="1" />
+          <line x1="20" x2="34" y1="16" y2="16" stroke="black" stroke-width="1" />
+          <circle cx="42" cy="16" r="6" stroke="black" fill="red" stroke-width="1" />
+          <line x1="50" x2="64" y1="16" y2="8" stroke="black" stroke-width="1" />
+          <circle cx="72" cy="8" r="6" stroke="black" fill="transparent" stroke-width="1" />
+          <line x1="50" x2="64" y1="16" y2="23" stroke="black" stroke-width="1" />
+          <circle cx="72" cy="23" r="6" stroke="black" fill="transparent" stroke-width="1" />
+        </svg>
+      </div>
+      <div class="sub-btn t-self t-child">
+        <svg viewBox="0 0 88 31" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="16" r="6" stroke="black" fill="transparent" stroke-width="1" />
+          <line x1="20" x2="34" y1="16" y2="16" stroke="black" stroke-width="1" />
+          <circle cx="42" cy="16" r="6" stroke="black" fill="red" stroke-width="1" />
+          <line x1="50" x2="64" y1="16" y2="8" stroke="black" stroke-width="1" />
+          <circle cx="72" cy="8" r="6" stroke="black" fill="red" stroke-width="1" />
+          <line x1="50" x2="64" y1="16" y2="23" stroke="black" stroke-width="1" />
+          <circle cx="72" cy="23" r="6" stroke="black" fill="red" stroke-width="1" />
+        </svg>
+      </div>
+      <div class="sub-btn t-child">
+        <svg viewBox="0 0 88 31" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="16" r="6" stroke="black" fill="transparent" stroke-width="1" />
+          <line x1="20" x2="34" y1="16" y2="16" stroke="black" stroke-width="1" />
+          <circle cx="42" cy="16" r="6" stroke="black" fill="transparent" stroke-width="1" />
+          <line x1="50" x2="64" y1="16" y2="8" stroke="black" stroke-width="1" />
+          <circle cx="72" cy="8" r="6" stroke="black" fill="red" stroke-width="1" />
+          <line x1="50" x2="64" y1="16" y2="23" stroke="black" stroke-width="1" />
+          <circle cx="72" cy="23" r="6" stroke="black" fill="red" stroke-width="1" />
+        </svg>
+      </div>
     </div>
   </span>
 </div>
@@ -269,6 +331,9 @@ body {
   <div class="flex fcol w-full">
     <div class="grow" id="confirm-msg" style="padding: 1rem;">Delete mind. Are you ready ?</div>
     <div class="flex w-full jus-center" style="padding-bottom: 1rem;">
+      <div class="confirm-svg-div" id="confirm-svg"></div>
+    </div>
+    <div class="flex w-full jus-center" style="padding-bottom: 1rem;">
       <button type="button" id="del-ok" style="width: 4rem;">Yes</button>
       <div name="spacer" style="width: 2rem;"></div>
       <button type="button" id="del-ng" style="width: 4rem;">No</button>
@@ -281,6 +346,7 @@ body {
   // DOM
   const root = document.querySelector(':root');
   const menu = document.getElementById('submenu');
+  const sbmn = document.getElementById('subsub');
   const background = document.getElementById('background');
   const foreground = document.getElementById('foreground');
   const lock_screen = document.getElementById('lock-screen');
@@ -339,6 +405,7 @@ body {
       target.style.top = `${ev.pageY - y}px`;
       lineReset(target); // リアルタイムに関係線を引き直す（モダンブラウザなら重くないはず？）
 
+      sbmn.classList.add('hidden');
       menu.classList.add('hidden');
       evnt.preventDefault();
     }
@@ -382,50 +449,68 @@ body {
           menu.style.top = `${mind.offsetTop - moh - 1}px`;
         }
         const mdl = menu.querySelector('#btn_del');
+        const smts = foreground.querySelectorAll('#subsub .t-self');
         if (mind.getAttribute('data-parent') == '') {
-          mdl.classList.add('is-root');
+          smts.forEach(function(t) {
+            t.classList.add('is-root');
+          });
         } else {
-          mdl.classList.remove('is-root');
+          smts.forEach(function(t) {
+            t.classList.remove('is-root');
+          });
         }
         menu.style.left = `${mind.offsetLeft}px`;
         menu.setAttribute('data-trigger', mind.getAttribute('id'));
+        sbmn.classList.add('hidden');
         menu.classList.remove('hidden');
       }
     } else {
       const mind = foreground.querySelector('.mind.selected');
       // メニュー表示中はメニューをクリックされたのかそれ以外かで処理を分ける
       if (elm.classList.contains('menu-btn')) {
-        switch (elm.textContent) {
-          case 'Del':
-            if (!elm.classList.contains('is-root')) {
-              delMind(mind, menu.offsetLeft + elm.offsetLeft, menu.offsetTop + elm.offsetTop);
-              menu.classList.add('hidden');
+        switch (elm.getAttribute('id')) {
+          case 'btn_del':
+            if (sbmn.classList.contains('hidden')) {
+              sbmn.style.left = `${menu.offsetLeft}px`;
+              sbmn.style.top = `${menu.offsetTop + foreground.querySelector('#btn_col').offsetTop}px`;
+              sbmn.classList.remove('hidden');
+            } else {
+              sbmn.classList.add('hidden');
             }
             break;
-          case 'Color':
+          case 'btn_col':
             changeColor(mind);
             break;
-          case 'New':
+          case 'btn_new':
             const nMind = newMind(mind);
             mind.classList.remove('selected');
             menu.classList.add('hidden');
             save();
             menuAction(nMind);
             break;
-          case 'Edit':
+          case 'btn_edt':
             editMind(mind, menu.offsetLeft + elm.offsetLeft, menu.offsetTop + elm.offsetTop);
             menu.classList.add('hidden');
             break;
         }
       } else {
-        menu.classList.add('hidden');
-        // 別のマインドをクリックしている場合は、そこにメニュー表示
-        const evMind = elm.closest('.mind');
-        if (evMind != null && evMind.getAttribute('id') !== menu.getAttribute('data-trigger')) {
-          setTimeout(function() {
-            menuAction(elm);
-          },10);
+        const subDiv = elm.closest('div.sub-btn');
+        if (subDiv != null) {
+          if (subDiv.classList.contains('is-root')) {
+            return;
+          }
+          delMindConfirm(subDiv, sbmn.offsetLeft, sbmn.offsetTop);
+        } else {
+          // 別のマインドをクリックしている場合は、そこにメニュー表示
+          const evMind = elm.closest('.mind');
+          if (evMind != null && evMind.getAttribute('id') !== menu.getAttribute('data-trigger')) {
+            setTimeout(function() {
+              menuAction(elm);
+            },10);
+          }
         }
+        sbmn.classList.add('hidden');
+        menu.classList.add('hidden');
       }
     }
   }
@@ -551,22 +636,29 @@ body {
   del_confirm.querySelector('#del-ok').addEventListener("click", delOK);
   del_confirm.querySelector('#del-ng').addEventListener("click", delNG);
   del_confirm.querySelector('#close-confirm').addEventListener("click", delNG);
-  function delMind(mind, x, y) {
+  function delMindConfirm(subDiv, x, y) {
     lock();
     const posX = Math.min(x, foreground.offsetWidth - del_confirm.offsetWidth);
     const posY = Math.min(y, foreground.offsetHeight - del_confirm.offsetHeight);
     del_confirm.style.left = `${posX}px`;
     del_confirm.style.top = `${posY}px`;
+    del_confirm.setAttribute('data-s', subDiv.classList.contains('t-self') ? 1 : 0);
+    del_confirm.setAttribute('data-c', subDiv.classList.contains('t-child') ? 1 : 0);
+    const confDialogSvg = del_confirm.querySelector('#confirm-svg');
+    while(confDialogSvg.firstChild) {
+      confDialogSvg.removeChild(confDialogSvg.firstChild);
+    }
+    confDialogSvg.appendChild(subDiv.querySelector('svg').cloneNode(true));
     del_confirm.classList.remove('hidden');
   }
-  function delOK() {
-    const mind = foreground.querySelector('.mind.selected');
-    const nid = mind.getAttribute('id');
-    const pid = mind.getAttribute('data-parent');
+  function delMindMain(target) {
+    const children = [];
+    const nid = target.getAttribute('id');
+    const pid = target.getAttribute('data-parent');
     const pMind = foreground.querySelector(`[id=${pid}]`);
     // 関係の差し替え
-    const targetMinds = foreground.querySelectorAll(`[data-parent="${nid}"]`);
-    for (const m of targetMinds) {
+    const childMinds = foreground.querySelectorAll(`[data-parent="${nid}"]`);
+    for (const m of childMinds) {
       m.setAttribute('data-parent', pid);
     }
     background.querySelectorAll(`[id$="-${nid}"]`).forEach(function(line) {
@@ -577,8 +669,29 @@ body {
       line.setAttribute('id', `${pid}-${toId}`);
       reLine(line, getRelationPoint(pMind, foreground.querySelector(`[id=${toId}]`)));
     });
-    mind.remove();
-    pMind.classList.add('selected');
+    target.remove();
+  }
+  function delOK() {
+    const mind = foreground.querySelector('.mind.selected');
+    const pid = mind.getAttribute('data-parent');
+    const pMind = foreground.querySelector(`[id=${pid}]`);
+    const nid = mind.getAttribute('id');
+    // 子孫を消す
+    if (del_confirm.getAttribute('data-c') == 1) {
+      let targets = Array.from(foreground.querySelectorAll(`[data-parent="${nid}"]`));
+      while (targets.length > 0) {
+        targets.forEach(function(m) {
+          delMindMain(m);
+        });
+        targets = Array.from(foreground.querySelectorAll(`[data-parent="${nid}"]`));
+      }
+    }
+    // 自分を消す
+    if (del_confirm.getAttribute('data-s') == 1) {
+      delMindMain(mind);
+      pMind.classList.add('selected');
+    }
+    save();
     closeDelCon();
   }
   function delNG() {
