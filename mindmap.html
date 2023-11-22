@@ -674,7 +674,7 @@ body {
   function delOK() {
     const mind = foreground.querySelector('.mind.selected');
     const pid = mind.getAttribute('data-parent');
-    const pMind = foreground.querySelector(`[id=${pid}]`);
+    const pMind = (pid) ? foreground.querySelector(`[id=${pid}]`) : null;
     const nid = mind.getAttribute('id');
     // 子孫を消す
     if (del_confirm.getAttribute('data-c') == 1) {
