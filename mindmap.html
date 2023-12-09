@@ -89,7 +89,12 @@ body {
 
 /* application */
 :root {
-  --curtype: pointer;
+  --curtype: initial;
+}
+#foreground {
+  &:hover {
+    cursor: var(--curtype, cursor);
+  }
 }
 .mind {
   padding: 0.2rem 0.5rem; /* up-down | left-right */
@@ -352,6 +357,7 @@ body {
   const lock_screen = document.getElementById('lock-screen');
   const input_dialog = document.getElementById('input-dialog');
   const del_confirm = document.getElementById('del-confirm');
+  let saveFlag = false;
   /**
    * マウスまわりの処理
    */
@@ -362,6 +368,7 @@ body {
   let untouchable = true;
   function mouseDown(evnt) {
     const isMouse = (evnt.type == 'mousedown');
+    saveFlag = false;
     if (evnt.type == 'touchstart') {
       untouchable = false;
     }
@@ -389,26 +396,33 @@ body {
         m.classList.remove('selected');
       }
       mind.classList.add('selected');
+    } else {
+      foreground.querySelectorAll('.mind').forEach(function(target) {
+        target.classList.add('dragging');
+        target.setAttribute('px', ev.pageX - target.offsetLeft);
+        target.setAttribute('py', ev.pageY - target.offsetTop);
+      });
     }
   }
   function mouseMove(evnt) {
     const ev = (evnt.type === 'mousemove') ? evnt : evnt.changedTouches[0];
-    const target = foreground.querySelector('.dragging');
+    const targets = foreground.querySelectorAll('.dragging');
     foreground.addEventListener("mouseleave", mouseUp);
     foreground.addEventListener("touchleave", mouseUp);
+    saveFlag = true;
 
-    if (target != null) {
-      root.style.setProperty('--curtype', 'grabbing');
+    root.style.setProperty('--curtype', 'grabbing');
+    targets.forEach(function(target) {
       const x = (target.getAttribute('px') ?? 0) - 0;
       const y = (target.getAttribute('py') ?? 0) - 0;
       target.style.left = `${ev.pageX - x}px`;
       target.style.top = `${ev.pageY - y}px`;
       lineReset(target); // リアルタイムに関係線を引き直す（モダンブラウザなら重くないはず？）
+    });
 
-      sbmn.classList.add('hidden');
-      menu.classList.add('hidden');
-      evnt.preventDefault();
-    }
+    sbmn.classList.add('hidden');
+    menu.classList.add('hidden');
+    evnt.preventDefault();
   }
   function mouseUp(evnt) {
     const ev = (evnt.type === 'mouseup' || evnt.type === 'mouseleave') ? evnt : evnt.changedTouches[0];
@@ -419,13 +433,15 @@ body {
     foreground.removeEventListener("touchmove", mouseMove);
     foreground.removeEventListener("touchend", mouseUp);
 
-    root.style.setProperty('--curtype', 'pointer');
-    const target = foreground.querySelector('.dragging');
-    if (target != null) {
-      // lineReset(target);
+    root.style.setProperty('--curtype', 'initial');
+    const targets = foreground.querySelectorAll('.dragging');
+    targets.forEach(function(target) {
       target.classList.remove('dragging');
+    });
+    if (saveFlag) {
       save(true);
     }
+
     const delta = ((ev.pageX - clickPos.x) ** 2) + ((ev.pageY - clickPos.y) ** 2);
     if (delta < 4) {
       clickAction(ev);
