@@ -615,6 +615,9 @@ body {
   /**
    * マインド編集
    */
+  input_dialog.querySelector('.mind-tbox').addEventListener("focus", function() {
+    this.select();
+  });
   function editMind(mind, x, y) {
     lock();
     const text_box = input_dialog.querySelector('.mind-tbox');
@@ -624,14 +627,11 @@ body {
     input_dialog.style.left = `${posX}px`;
     input_dialog.style.top = `${posY}px`;
     input_dialog.classList.remove('hidden');
-    text_box.focus();
-    text_box.select();
   }
   function closeEditMind() {
     input_dialog.classList.add('hidden');
     lockRelease();
   }
-  input_dialog.querySelector('form').addEventListener("submit", submitMind);
   input_dialog.querySelector('#close-edit').addEventListener("click", closeEditMind);
   function submitMind(ev) {
     ev.preventDefault();
@@ -641,6 +641,7 @@ body {
     save();
     closeEditMind();
   }
+  input_dialog.querySelector('form').addEventListener("submit", submitMind);
   function lock() {
     lock_screen.classList.remove('hidden');
   }
