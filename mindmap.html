@@ -1,858 +1,959 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>mind mapping tool</title>
-<style>
-button, input, select, textarea {
-  font-size: 1rem;
-}
-/* sizing, layout */
-* {
-  box-sizing: border-box;
-}
-html {
-  height: 100vh;
-  margin: 0;
-}
-body {
-  margin: 0;
-}
-.w-fit {
-  width:fit-content;
-}
-.w-full {
-  width: 100%;
-}
-.w-80 {
-  width: 80%;
-}
-.h-full {
-  height: 100%;
-}
-.wh-full {
-  width: 100%;
-  height: 100%;
-}
-/* view */
-.hidden {
-  visibility: hidden;
-}
-.none {
-  display: none;
-}
-.bg-trans {
-  background-color: transparent;
-}
-.bg-white {
-  background-color: #fff;
-}
-.rel {
-  position: relative;
-}
-.abs {
-  position: absolute;
-}
-.m-0 {
-  margin: 0;
-}
-.p-0 {
-  padding: 0;
-}
-.pr-2 {
-  padding-right: 0.5rem;
-}
-.pl-2 {
-  padding-left: 0.5rem;
-}
-
-/* flex */
-.flex {
-  display: flex;
-  align-items: flex-start;
-}
-.fcol {
-  flex-direction: column;
-}
-.grow {
-  flex-grow: 1;
-}
-.text-center {
-  text-align: center;
-}
-.jus-bw {
-  justify-content: space-between;
-}
-.jus-center {
-  justify-content: center;
-}
-
-/* application */
-:root {
-  --curtype: initial;
-}
-#foreground {
-  &:hover {
-    cursor: var(--curtype, cursor);
-  }
-}
-.mind {
-  padding: 0.2rem 0.5rem; /* up-down | left-right */
-  color: #222;
-  border: solid 1.5px #222;
-  border-radius: 0.8rem;
-  width: fit-content;
-  min-width: 10rem;
-  max-width: 80%;
-  user-select: none;
-  position: absolute;
-  background-color: #fff;
-  &.bg-0 { background-color: #fff; }
-  &.bg-1 { background-color: #faa; }
-  &.bg-2 { background-color: #aaf; }
-  &.bg-3 { background-color: #afa; }
-  &.bg-4 { background-color: #ffa; }
-  &.bg-5 { background-color: #faf; }
-  &.bg-6 { background-color: #aff; }
-  &.bg-7 { background-color: #aaa; }
-  &.selected {
-    border-color: #f22;
-  }
-  &:hover {
-    cursor: var(--curtype, pointer);
-  }
-  & div {
-    text-align: center;
-  }
-  &[data-parent=""] div[name="data"] {
-    font-weight: bold;
-  }
-}
-.mind-tbox {
-  border: none;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
-  background-color: transparent;
-  color: blue;
-  outline: none;
-}
-
-/* menu button */
-.menu-btn,.sub-btn {
-  margin: 0;
-  padding: 0.25rem;
-  font-weight: bold;
-  text-align: center;
-  user-select: none;
-  border-style: solid;
-  border-color:blue;
-  border-radius: 0;
-  border-width: 1px;
-  border-collapse: collapse;
-  background-color: white;
-  color: blue;
-}
-.menu-btn {
-  width: 8rem;
-  &:hover {
-    background-color: blue;
-    &.is-root {
-      background-color: #444;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mind mapping tool</title>
+  <style>
+    button,
+    input,
+    select,
+    textarea {
+      font-size: 1rem;
     }
-    color: white;
-    cursor: pointer;
-  }
-  &:first-child {
-    border-top-left-radius: 0.8rem;
-    border-top-right-radius: 0.8rem;
-  }
-  &:last-child {
-    border-bottom-left-radius: 0.8rem;
-    border-bottom-right-radius: 0.8rem;
-  }
-}
-.sub-btn {
-  width: 8rem;
-  & svg {
-    width: 45%;
-  }
-  &.is-root {
-    background-color: #444;
-  }
-  &:hover {
-    background-color: blue;
-    &.is-root {
-      background-color: #444;
+
+    /* sizing, layout */
+    * {
+      box-sizing: border-box;
     }
-  }
-  &:last-child {
-    border-bottom-left-radius: 0.8rem;
-    border-bottom-right-radius: 0.8rem;
-  }
-}
-.confirm-svg-div {
-  width: 8rem;
-  text-align: center;
-  & svg {
-    width: 45%;
-  }
-}
 
-.ttlbar {
-  user-select: none;
-  color: white;
-  background-color: blue;
-  font-weight: bold;
-  padding-left: 0.5rem;
-  padding-right: 0.2rem;
-  border: black 1px solid;
-  border-top-left-radius: 0.4rem;
-  border-top-right-radius: 0.4rem;
-  align-items: center;
-  &+form, &+div {
-    background-color: white;
-    border-left: black 1px solid;
-    border-right: black 1px solid;
-    border-bottom: black 1px solid;
-    border-bottom-left-radius: 0.4rem;
-    border-bottom-right-radius: 0.4rem;
-  }
-  & button {
-    border-radius: 0.4rem;
-    font-size: 0.75rem;
-  }
-}
+    html {
+      height: 100vh;
+      overflow: hidden;
+      margin: 0;
+    }
 
-.rel-line {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  height: 4px;
-  background-color: black;
-  opacity: 20%;
-  border-radius: 0.2rem;
-  transform-origin: 0% 0%;
-}
+    body {
+      margin: 0;
+    }
 
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+    .w-fit {
+      width: fit-content;
+    }
 
-#lock-screen {
-  background-color: black;
-  opacity: 40%;
-}
+    .w-full {
+      width: 100%;
+    }
 
-</style>
+    .w-80 {
+      width: 80%;
+    }
+
+    .h-full {
+      height: 100%;
+    }
+
+    .wh-full {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* view */
+    .hidden {
+      visibility: hidden;
+    }
+
+    .none {
+      display: none;
+    }
+
+    .bg-trans {
+      background-color: transparent;
+    }
+
+    .bg-white {
+      background-color: #fff;
+    }
+
+    .rel {
+      position: relative;
+    }
+
+    .abs {
+      position: absolute;
+    }
+
+    .m-0 {
+      margin: 0;
+    }
+
+    .p-0 {
+      padding: 0;
+    }
+
+    .pr-2 {
+      padding-right: 0.5rem;
+    }
+
+    .pl-2 {
+      padding-left: 0.5rem;
+    }
+
+    /* flex */
+    .flex {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .fcol {
+      flex-direction: column;
+    }
+
+    .grow {
+      flex-grow: 1;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .jus-bw {
+      justify-content: space-between;
+    }
+
+    .jus-center {
+      justify-content: center;
+    }
+
+    /* application */
+    :root {
+      --curtype: initial;
+    }
+
+    #foreground {
+      &:hover {
+        cursor: var(--curtype, cursor);
+      }
+    }
+
+    .mind {
+      padding: 0.2rem 0.5rem;
+      /* up-down | left-right */
+      color: #222;
+      border: solid 1.5px #222;
+      border-radius: 0.8rem;
+      width: fit-content;
+      min-width: 10rem;
+      max-width: 80%;
+      user-select: none;
+      position: absolute;
+      background-color: #fff;
+
+      &.bg-0 {
+        background-color: #fff;
+      }
+
+      &.bg-1 {
+        background-color: #faa;
+      }
+
+      &.bg-2 {
+        background-color: #aaf;
+      }
+
+      &.bg-3 {
+        background-color: #afa;
+      }
+
+      &.bg-4 {
+        background-color: #ffa;
+      }
+
+      &.bg-5 {
+        background-color: #faf;
+      }
+
+      &.bg-6 {
+        background-color: #aff;
+      }
+
+      &.bg-7 {
+        background-color: #aaa;
+      }
+
+      &.selected {
+        border-color: #f22;
+      }
+
+      &:hover {
+        cursor: var(--curtype, pointer);
+      }
+
+      & div {
+        text-align: center;
+      }
+
+      &[data-parent=""] div[name="data"] {
+        font-weight: bold;
+      }
+    }
+
+    .mind-tbox {
+      border: none;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+      padding-top: 0.25rem;
+      padding-bottom: 0.25rem;
+      background-color: transparent;
+      color: blue;
+      outline: none;
+    }
+
+    /* menu button */
+    .menu-btn,
+    .sub-btn {
+      margin: 0;
+      padding: 0.25rem;
+      font-weight: bold;
+      text-align: center;
+      user-select: none;
+      border-style: solid;
+      border-color: blue;
+      border-radius: 0;
+      border-width: 1px;
+      border-collapse: collapse;
+      background-color: white;
+      color: blue;
+    }
+
+    .menu-btn {
+      width: 8rem;
+
+      &:hover {
+        background-color: blue;
+
+        &.is-root {
+          background-color: #444;
+        }
+
+        color: white;
+        cursor: pointer;
+      }
+
+      &:first-child {
+        border-top-left-radius: 0.8rem;
+        border-top-right-radius: 0.8rem;
+      }
+
+      &:last-child {
+        border-bottom-left-radius: 0.8rem;
+        border-bottom-right-radius: 0.8rem;
+      }
+    }
+
+    .sub-btn {
+      width: 8rem;
+
+      & svg {
+        width: 45%;
+      }
+
+      &.is-root {
+        background-color: #444;
+      }
+
+      &:hover {
+        background-color: blue;
+
+        &.is-root {
+          background-color: #444;
+        }
+      }
+
+      &:last-child {
+        border-bottom-left-radius: 0.8rem;
+        border-bottom-right-radius: 0.8rem;
+      }
+    }
+
+    .confirm-svg-div {
+      width: 8rem;
+      text-align: center;
+
+      & svg {
+        width: 45%;
+      }
+    }
+
+    .ttlbar {
+      user-select: none;
+      color: white;
+      background-color: blue;
+      font-weight: bold;
+      padding-left: 0.5rem;
+      padding-right: 0.2rem;
+      border: black 1px solid;
+      border-top-left-radius: 0.4rem;
+      border-top-right-radius: 0.4rem;
+      align-items: center;
+
+      &+form,
+      &+div {
+        background-color: white;
+        border-left: black 1px solid;
+        border-right: black 1px solid;
+        border-bottom: black 1px solid;
+        border-bottom-left-radius: 0.4rem;
+        border-bottom-right-radius: 0.4rem;
+      }
+
+      & button {
+        border-radius: 0.4rem;
+        font-size: 0.75rem;
+      }
+    }
+
+    .rel-line {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      height: 4px;
+      background-color: black;
+      opacity: 20%;
+      border-radius: 0.2rem;
+      transform-origin: 0% 0%;
+    }
+
+    .truncate {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #lock-screen {
+      background-color: black;
+      opacity: 40%;
+    }
+  </style>
 
 </head>
+
 <body class="w-full h-full flex">
-<!-- [[ relation layer ]] -->
-<div id="background" class="abs wh-full">
-  <!-- lines -->
-  <span id="lines"></span>
-  <!-- original -->
-  <div id="line_base" name="liner" class="abs hidden rel-line"></div>
-</div>
-<!-- [[ mind layer ]] -->
-<div id="foreground" class="abs wh-full" style="background-color: transparent">
-  <!-- node -->
-  <span id="child_minds"></span>
-  <div class="flex mind" id="m0" data-parent="" style="top: 5rem; left:10rem;">
-    <div name="data" class="grow w-fit truncate">Mind Map</div>
+  <!-- [[ relation layer ]] -->
+  <div id="background" class="abs wh-full">
+    <!-- lines -->
+    <span id="lines"></span>
+    <!-- original -->
+    <div id="line_base" name="liner" class="abs hidden rel-line"></div>
   </div>
-  <!-- sub menu -->
-  <span class="abs hidden" id="submenu">
-    <div class="flex fcol w-fit">
-      <div class="menu-btn" id="btn_del">Del</div>
-      <div class="menu-btn" id="btn_col">Color</div>
-      <div class="menu-btn" id="btn_new">New</div>
-      <div class="menu-btn" id="btn_edt">Edit</div>
+  <!-- [[ mind layer ]] -->
+  <div id="foreground" class="abs wh-full" style="background-color: transparent">
+    <!-- node -->
+    <span id="child_minds"></span>
+    <div class="flex mind" id="m0" data-parent="" style="top: 5rem; left:10rem;">
+      <div name="data" class="grow w-fit truncate">Mind Map</div>
     </div>
-  </span>
-  <!-- sub sub menu -->
-  <span class="abs hidden" id="subsub">
-    <div class="flex fcol w-fit">
-      <div class="sub-btn t-self">
-        <svg viewBox="0 0 88 31" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="16" r="6" stroke="black" fill="transparent" stroke-width="1" />
-          <line x1="20" x2="34" y1="16" y2="16" stroke="black" stroke-width="1" />
-          <circle cx="42" cy="16" r="6" stroke="black" fill="red" stroke-width="1" />
-          <line x1="50" x2="64" y1="16" y2="8" stroke="black" stroke-width="1" />
-          <circle cx="72" cy="8" r="6" stroke="black" fill="transparent" stroke-width="1" />
-          <line x1="50" x2="64" y1="16" y2="23" stroke="black" stroke-width="1" />
-          <circle cx="72" cy="23" r="6" stroke="black" fill="transparent" stroke-width="1" />
-        </svg>
+    <!-- sub menu -->
+    <span class="abs hidden" id="submenu">
+      <div class="flex fcol w-fit">
+        <div class="menu-btn" id="btn_del">Del</div>
+        <div class="menu-btn" id="btn_col">Color</div>
+        <div class="menu-btn" id="btn_new">New</div>
+        <div class="menu-btn" id="btn_edt">Edit</div>
       </div>
-      <div class="sub-btn t-self t-child">
-        <svg viewBox="0 0 88 31" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="16" r="6" stroke="black" fill="transparent" stroke-width="1" />
-          <line x1="20" x2="34" y1="16" y2="16" stroke="black" stroke-width="1" />
-          <circle cx="42" cy="16" r="6" stroke="black" fill="red" stroke-width="1" />
-          <line x1="50" x2="64" y1="16" y2="8" stroke="black" stroke-width="1" />
-          <circle cx="72" cy="8" r="6" stroke="black" fill="red" stroke-width="1" />
-          <line x1="50" x2="64" y1="16" y2="23" stroke="black" stroke-width="1" />
-          <circle cx="72" cy="23" r="6" stroke="black" fill="red" stroke-width="1" />
-        </svg>
+    </span>
+    <!-- sub sub menu -->
+    <span class="abs hidden" id="subsub">
+      <div class="flex fcol w-fit">
+        <div class="sub-btn t-self">
+          <svg viewBox="0 0 88 31" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="16" r="6" stroke="black" fill="transparent" stroke-width="1" />
+            <line x1="20" x2="34" y1="16" y2="16" stroke="black" stroke-width="1" />
+            <circle cx="42" cy="16" r="6" stroke="black" fill="red" stroke-width="1" />
+            <line x1="50" x2="64" y1="16" y2="8" stroke="black" stroke-width="1" />
+            <circle cx="72" cy="8" r="6" stroke="black" fill="transparent" stroke-width="1" />
+            <line x1="50" x2="64" y1="16" y2="23" stroke="black" stroke-width="1" />
+            <circle cx="72" cy="23" r="6" stroke="black" fill="transparent" stroke-width="1" />
+          </svg>
+        </div>
+        <div class="sub-btn t-self t-child">
+          <svg viewBox="0 0 88 31" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="16" r="6" stroke="black" fill="transparent" stroke-width="1" />
+            <line x1="20" x2="34" y1="16" y2="16" stroke="black" stroke-width="1" />
+            <circle cx="42" cy="16" r="6" stroke="black" fill="red" stroke-width="1" />
+            <line x1="50" x2="64" y1="16" y2="8" stroke="black" stroke-width="1" />
+            <circle cx="72" cy="8" r="6" stroke="black" fill="red" stroke-width="1" />
+            <line x1="50" x2="64" y1="16" y2="23" stroke="black" stroke-width="1" />
+            <circle cx="72" cy="23" r="6" stroke="black" fill="red" stroke-width="1" />
+          </svg>
+        </div>
+        <div class="sub-btn t-child">
+          <svg viewBox="0 0 88 31" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="16" r="6" stroke="black" fill="transparent" stroke-width="1" />
+            <line x1="20" x2="34" y1="16" y2="16" stroke="black" stroke-width="1" />
+            <circle cx="42" cy="16" r="6" stroke="black" fill="transparent" stroke-width="1" />
+            <line x1="50" x2="64" y1="16" y2="8" stroke="black" stroke-width="1" />
+            <circle cx="72" cy="8" r="6" stroke="black" fill="red" stroke-width="1" />
+            <line x1="50" x2="64" y1="16" y2="23" stroke="black" stroke-width="1" />
+            <circle cx="72" cy="23" r="6" stroke="black" fill="red" stroke-width="1" />
+          </svg>
+        </div>
       </div>
-      <div class="sub-btn t-child">
-        <svg viewBox="0 0 88 31" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="16" r="6" stroke="black" fill="transparent" stroke-width="1" />
-          <line x1="20" x2="34" y1="16" y2="16" stroke="black" stroke-width="1" />
-          <circle cx="42" cy="16" r="6" stroke="black" fill="transparent" stroke-width="1" />
-          <line x1="50" x2="64" y1="16" y2="8" stroke="black" stroke-width="1" />
-          <circle cx="72" cy="8" r="6" stroke="black" fill="red" stroke-width="1" />
-          <line x1="50" x2="64" y1="16" y2="23" stroke="black" stroke-width="1" />
-          <circle cx="72" cy="23" r="6" stroke="black" fill="red" stroke-width="1" />
-        </svg>
+    </span>
+  </div>
+  <!-- [[ lock Layer ]] -->
+  <div id="lock-screen" class="abs wh-full hidden"></div>
+  <!-- [[ input form ]] -->
+  <div id="input-dialog" class="abs fcol w-full hidden">
+    <div class="flex w-full ttlbar jus-bw">
+      <div>Edit content</div>
+      <div><button type="button" id="close-edit">✕</button></div>
+    </div>
+    <form action="#" class="m-0 p-0">
+      <div class="flex w-full">
+        <input type="text" length=60 maxlength=120 class="grow truncate mind-tbox">
+      </div>
+    </form>
+  </div>
+  <!-- [[ delete-confirm dialog ]] -->
+  <div id="del-confirm" class="abs fcol w-fit hidden">
+    <div class="flex w-full ttlbar jus-bw">
+      <div>Confirm</div>
+      <div><button type="button" id="close-confirm">✕</button></div>
+    </div>
+    <div class="flex fcol w-full">
+      <div class="grow" id="confirm-msg" style="padding: 1rem;">Delete mind. Are you ready ?</div>
+      <div class="flex w-full jus-center" style="padding-bottom: 1rem;">
+        <div class="confirm-svg-div" id="confirm-svg"></div>
+      </div>
+      <div class="flex w-full jus-center" style="padding-bottom: 1rem;">
+        <button type="button" id="del-ok" style="width: 4rem;">Yes</button>
+        <div name="spacer" style="width: 2rem;"></div>
+        <button type="button" id="del-ng" style="width: 4rem;">No</button>
       </div>
     </div>
-  </span>
-</div>
-<!-- [[ lock Layer ]] -->
-<div id="lock-screen" class="abs wh-full hidden"></div>
-<!-- [[ input form ]] -->
-<div id="input-dialog" class="abs fcol w-fit hidden">
-  <div class="flex w-full ttlbar jus-bw">
-    <div>Edit content</div>
-    <div><button type="button" id="close-edit">✕</button></div>
   </div>
-  <form action="#" class="m-0 p-0">
-    <div class="flex w-full">
-      <input type="text" length=60 maxlength=120 class="grow truncate mind-tbox">
-    </div>
-  </form>
-</div>
-<!-- [[ delete-confirm dialog ]] -->
-<div id="del-confirm" class="abs fcol w-fit hidden">
-  <div class="flex w-full ttlbar jus-bw">
-    <div>Confirm</div>
-    <div><button type="button" id="close-confirm">✕</button></div>
-  </div>
-  <div class="flex fcol w-full">
-    <div class="grow" id="confirm-msg" style="padding: 1rem;">Delete mind. Are you ready ?</div>
-    <div class="flex w-full jus-center" style="padding-bottom: 1rem;">
-      <div class="confirm-svg-div" id="confirm-svg"></div>
-    </div>
-    <div class="flex w-full jus-center" style="padding-bottom: 1rem;">
-      <button type="button" id="del-ok" style="width: 4rem;">Yes</button>
-      <div name="spacer" style="width: 2rem;"></div>
-      <button type="button" id="del-ng" style="width: 4rem;">No</button>
-    </div>
-  </div>
-</div>
 
-<script>
-(function(){
-  // DOM
-  const root = document.querySelector(':root');
-  const menu = document.getElementById('submenu');
-  const sbmn = document.getElementById('subsub');
-  const background = document.getElementById('background');
-  const foreground = document.getElementById('foreground');
-  const lock_screen = document.getElementById('lock-screen');
-  const input_dialog = document.getElementById('input-dialog');
-  const del_confirm = document.getElementById('del-confirm');
-  let saveFlag = false;
-  /**
-   * マウスまわりの処理
-   */
-  const clickPos = {x: null, y:null};
-  ['mousedown', 'touchstart'].forEach(function(action) {
-    foreground.addEventListener(action, mouseDown);
-  });
-  let untouchable = true;
-  function mouseDown(evnt) {
-    const isMouse = (evnt.type == 'mousedown');
-    saveFlag = false;
-    if (evnt.type == 'touchstart') {
-      untouchable = false;
-    }
-    if (isMouse && !untouchable) {
-      return;
-    }
-    const ev = isMouse ? evnt : evnt.changedTouches[0];
-    clickPos.x = ev.pageX;
-    clickPos.y = ev.pageY;
-
-    foreground.addEventListener("mouseup", mouseUp);
-    foreground.addEventListener("mousemove", mouseMove);
-    foreground.addEventListener("touchend", mouseUp);
-    foreground.addEventListener("touchmove", mouseMove);
-        
-    const mind = ev.target.closest('.mind');
-    // menu
-    if (mind != null) {
-      mind.classList.add('dragging');
-      mind.setAttribute('px', ev.pageX - mind.offsetLeft);
-      mind.setAttribute('py', ev.pageY - mind.offsetTop);
-
-      const allMind = foreground.querySelectorAll('.mind');
-      for (const m of allMind) {
-        m.classList.remove('selected');
-      }
-      mind.classList.add('selected');
-    } else {
-      foreground.querySelectorAll('.mind').forEach(function(target) {
-        target.classList.add('dragging');
-        target.setAttribute('px', ev.pageX - target.offsetLeft);
-        target.setAttribute('py', ev.pageY - target.offsetTop);
+  <script>
+    (function () {
+      // DOM
+      const root = document.querySelector(':root');
+      const menu = document.getElementById('submenu');
+      const sbmn = document.getElementById('subsub');
+      const background = document.getElementById('background');
+      const foreground = document.getElementById('foreground');
+      const lock_screen = document.getElementById('lock-screen');
+      const input_dialog = document.getElementById('input-dialog');
+      const del_confirm = document.getElementById('del-confirm');
+      let saveFlag = false;
+      /**
+       * マウスまわりの処理
+       */
+      const clickPos = { x: null, y: null };
+      ['mousedown', 'touchstart'].forEach(function (action) {
+        foreground.addEventListener(action, mouseDown);
       });
-    }
-  }
-  function mouseMove(evnt) {
-    const ev = (evnt.type === 'mousemove') ? evnt : evnt.changedTouches[0];
-    const targets = foreground.querySelectorAll('.dragging');
-    foreground.addEventListener("mouseleave", mouseUp);
-    foreground.addEventListener("touchleave", mouseUp);
-    saveFlag = true;
-
-    root.style.setProperty('--curtype', 'grabbing');
-    targets.forEach(function(target) {
-      const x = (target.getAttribute('px') ?? 0) - 0;
-      const y = (target.getAttribute('py') ?? 0) - 0;
-      target.style.left = `${ev.pageX - x}px`;
-      target.style.top = `${ev.pageY - y}px`;
-      lineReset(target); // リアルタイムに関係線を引き直す（モダンブラウザなら重くないはず？）
-    });
-
-    sbmn.classList.add('hidden');
-    menu.classList.add('hidden');
-    evnt.preventDefault();
-  }
-  function mouseUp(evnt) {
-    const ev = (evnt.type === 'mouseup' || evnt.type === 'mouseleave') ? evnt : evnt.changedTouches[0];
-    foreground.removeEventListener("mouseleave", mouseUp);
-    foreground.removeEventListener("touchleave", mouseUp);
-    foreground.removeEventListener("mousemove", mouseMove);
-    foreground.removeEventListener("mouseup", mouseUp);
-    foreground.removeEventListener("touchmove", mouseMove);
-    foreground.removeEventListener("touchend", mouseUp);
-
-    root.style.setProperty('--curtype', 'initial');
-    const targets = foreground.querySelectorAll('.dragging');
-    targets.forEach(function(target) {
-      target.classList.remove('dragging');
-    });
-    if (saveFlag) {
-      save(true);
-    }
-
-    const delta = ((ev.pageX - clickPos.x) ** 2) + ((ev.pageY - clickPos.y) ** 2);
-    if (delta < 4) {
-      clickAction(ev);
-    }
-  }
-  function clickAction(ev) {
-    menuAction(ev.target);
-  }
-  /**
-   * メニュー処理
-   */
-  function menuAction(elm) {
-    if (menu.classList.contains('hidden')) {
-      const mind = elm.closest('.mind');
-      // メニューが非表示でマインドクリック時はメニュー表示
-      if (mind != null) {
-        const moh = menu.offsetHeight;
-        if (moh > mind.offsetTop) {
-          menu.style.top = `${mind.offsetTop + mind.offsetHeight + 1}px`;
-        } else {
-          menu.style.top = `${mind.offsetTop - moh - 1}px`;
+      let untouchable = true;
+      function mouseDown(evnt) {
+        const isMouse = (evnt.type == 'mousedown');
+        saveFlag = false;
+        if (evnt.type == 'touchstart') {
+          untouchable = false;
         }
-        const mdl = menu.querySelector('#btn_del');
-        const smts = foreground.querySelectorAll('#subsub .t-self');
-        if (mind.getAttribute('data-parent') == '') {
-          smts.forEach(function(t) {
-            t.classList.add('is-root');
-          });
+        if (isMouse && !untouchable) {
+          return;
+        }
+        const ev = isMouse ? evnt : evnt.changedTouches[0];
+        clickPos.x = ev.pageX;
+        clickPos.y = ev.pageY;
+
+        foreground.addEventListener("mouseup", mouseUp);
+        foreground.addEventListener("mousemove", mouseMove);
+        foreground.addEventListener("touchend", mouseUp);
+        foreground.addEventListener("touchmove", mouseMove);
+
+        const mind = ev.target.closest('.mind');
+        // menu
+        if (mind != null) {
+          mind.classList.add('dragging');
+          mind.setAttribute('px', ev.pageX - mind.offsetLeft);
+          mind.setAttribute('py', ev.pageY - mind.offsetTop);
+
+          const allMind = foreground.querySelectorAll('.mind');
+          for (const m of allMind) {
+            m.classList.remove('selected');
+          }
+          mind.classList.add('selected');
         } else {
-          smts.forEach(function(t) {
-            t.classList.remove('is-root');
+          foreground.querySelectorAll('.mind').forEach(function (target) {
+            target.classList.add('dragging');
+            target.setAttribute('px', ev.pageX - target.offsetLeft);
+            target.setAttribute('py', ev.pageY - target.offsetTop);
           });
         }
-        menu.style.left = `${mind.offsetLeft}px`;
-        menu.setAttribute('data-trigger', mind.getAttribute('id'));
-        sbmn.classList.add('hidden');
-        menu.classList.remove('hidden');
       }
-    } else {
-      const mind = foreground.querySelector('.mind.selected');
-      // メニュー表示中はメニューをクリックされたのかそれ以外かで処理を分ける
-      if (elm.classList.contains('menu-btn')) {
-        switch (elm.getAttribute('id')) {
-          case 'btn_del':
-            if (sbmn.classList.contains('hidden')) {
-              sbmn.style.left = `${menu.offsetLeft}px`;
-              sbmn.style.top = `${menu.offsetTop + foreground.querySelector('#btn_col').offsetTop}px`;
-              sbmn.classList.remove('hidden');
-            } else {
-              sbmn.classList.add('hidden');
-            }
-            break;
-          case 'btn_col':
-            changeColor(mind);
-            break;
-          case 'btn_new':
-            const nMind = newMind(mind);
-            mind.classList.remove('selected');
-            menu.classList.add('hidden');
-            save();
-            menuAction(nMind);
-            break;
-          case 'btn_edt':
-            editMind(mind, menu.offsetLeft + elm.offsetLeft, menu.offsetTop + elm.offsetTop);
-            menu.classList.add('hidden');
-            break;
-        }
-      } else {
-        const subDiv = elm.closest('div.sub-btn');
-        if (subDiv != null) {
-          if (subDiv.classList.contains('is-root')) {
-            return;
-          }
-          delMindConfirm(subDiv, sbmn.offsetLeft, sbmn.offsetTop);
-        } else {
-          // 別のマインドをクリックしている場合は、そこにメニュー表示
-          const evMind = elm.closest('.mind');
-          if (evMind != null && evMind.getAttribute('id') !== menu.getAttribute('data-trigger')) {
-            setTimeout(function() {
-              menuAction(elm);
-            },10);
-          }
-        }
+      function mouseMove(evnt) {
+        const ev = (evnt.type === 'mousemove') ? evnt : evnt.changedTouches[0];
+        const targets = foreground.querySelectorAll('.dragging');
+        foreground.addEventListener("mouseleave", mouseUp);
+        foreground.addEventListener("touchleave", mouseUp);
+        saveFlag = true;
+
+        root.style.setProperty('--curtype', 'grabbing');
+        targets.forEach(function (target) {
+          const x = (target.getAttribute('px') ?? 0) - 0;
+          const y = (target.getAttribute('py') ?? 0) - 0;
+          target.style.left = `${ev.pageX - x}px`;
+          target.style.top = `${ev.pageY - y}px`;
+          lineReset(target); // リアルタイムに関係線を引き直す（モダンブラウザなら重くないはず？）
+        });
+
         sbmn.classList.add('hidden');
         menu.classList.add('hidden');
+        evnt.preventDefault();
       }
-    }
-  }
-  /**
-   * マインドの色を変える
-   */
-  function changeColor(mind) {
-    let colIdx = 0;
-    for (let i = 0; i < 8; i++) {
-      if (mind.classList.contains(`bg-${i}`)) {
-        mind.classList.remove(`bg-${i}`);
-        colIdx = i;
-        break;
-      }
-    }
-    mind.classList.add(`bg-${(colIdx + 1) % 8}`);
-    save();
-  }
-  /**
-   * 新しいマインドを生み出す
-   */
-  function newMind(mind) {
-    const nMind = mind.cloneNode(true);
-    nMind.setAttribute('id', `m${Date.now()}`);
-    nMind.setAttribute('data-parent', mind.getAttribute('id') ?? '');
-    nMind.style.top = `${Math.floor(menu.offsetTop + (menu.offsetHeight / 2))}px`;
-    nMind.querySelector('[name="data"]').textContent = 'new mind.';
-    foreground.querySelector('#child_minds').appendChild(nMind);
-    liner(mind, nMind);
-    return nMind;
-  }
+      function mouseUp(evnt) {
+        const ev = (evnt.type === 'mouseup' || evnt.type === 'mouseleave') ? evnt : evnt.changedTouches[0];
+        foreground.removeEventListener("mouseleave", mouseUp);
+        foreground.removeEventListener("touchleave", mouseUp);
+        foreground.removeEventListener("mousemove", mouseMove);
+        foreground.removeEventListener("mouseup", mouseUp);
+        foreground.removeEventListener("touchmove", mouseMove);
+        foreground.removeEventListener("touchend", mouseUp);
 
-  /**
-   * 線を引く
-   */
-  function liner(domA, domB) {
-    const pos = getRelationPoint(domA, domB);
-    const newLine = document.getElementById('line_base').cloneNode();
-    newLine.setAttribute('id', `${pos.a.id ?? ''}-${pos.b.id ?? ''}`);
-    reLine(newLine, pos);
-    newLine.classList.remove('hidden');
-    background.querySelector('#lines').appendChild(newLine);
-  }
-  function reLine(line, pos) {
-    line.style.width = `${pos.len}px`;
-    line.style.left = `${pos.a.x}px`;
-    line.style.top = `${pos.a.y}px`;
-    line.style.transform = `rotate(${pos.deg}deg)`;
-  }
-  function lineReset(mind) {
-    const mindId = mind.getAttribute('id');
-    background.querySelectorAll(`[id$="-${mindId}"]`).forEach(function(line) {
-      const fromId = line.getAttribute('id').split('-')[0];
-      reLine(line, getRelationPoint(foreground.querySelector(`[id=${fromId}]`), mind));
-    });
-    background.querySelectorAll(`[id^="${mindId}-"]`).forEach(function(line) {
-      const toId = line.getAttribute('id').split('-')[1];
-      reLine(line, getRelationPoint(mind, foreground.querySelector(`[id=${toId}]`)));
-    });
-  }
-  /**
-   * ２つのDOMの中心点と、引数１のDOMから引数２のDOMへの角度と距離を取得する
-   */
-  function getRelationPoint(domA, domB) {
-    const a = {
-      x: domA.offsetLeft + (domA.offsetWidth / 2),
-      y: domA.offsetTop + (domA.offsetHeight / 2),
-      id: domA.getAttribute('id'),
-    };
-    const b = {
-      x: domB.offsetLeft + (domB.offsetWidth / 2),
-      y: domB.offsetTop + (domB.offsetHeight / 2),
-      id: domB.getAttribute('id'),
-    };
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const dd = Math.sqrt((dx ** 2) + (dy ** 2));
-    let deg = Math.acos(dx / dd) * 180 / Math.PI;
-    if (dy < 0) {
-      deg = 360 - deg;
-    }
-    return {a: a, b: b, deg: deg, len:dd};
-  }
-
-  /**
-   * マインド編集
-   */
-  input_dialog.querySelector('.mind-tbox').addEventListener("focus", function() {
-    this.select();
-  });
-  function editMind(mind, x, y) {
-    lock();
-    const text_box = input_dialog.querySelector('.mind-tbox');
-    text_box.value = mind.querySelector('[name="data"]').textContent;
-    const posX = Math.min(x, foreground.offsetWidth - input_dialog.offsetWidth);
-    const posY = Math.min(y, foreground.offsetHeight - input_dialog.offsetHeight);
-    input_dialog.style.left = `${posX}px`;
-    input_dialog.style.top = `${posY}px`;
-    input_dialog.classList.remove('hidden');
-  }
-  function closeEditMind() {
-    input_dialog.classList.add('hidden');
-    lockRelease();
-  }
-  input_dialog.querySelector('#close-edit').addEventListener("click", closeEditMind);
-  function submitMind(ev) {
-    ev.preventDefault();
-    const mind = foreground.querySelector('.selected');
-    const text = input_dialog.querySelector('.mind-tbox').value;
-    mind.querySelector('[name="data"]').textContent = (text != '') ? text : '(´・ω・｀)';
-    save();
-    closeEditMind();
-  }
-  input_dialog.querySelector('form').addEventListener("submit", submitMind);
-  function lock() {
-    lock_screen.classList.remove('hidden');
-  }
-  function lockRelease(ev) {
-    lock_screen.classList.add('hidden');
-  }
-
-  /**
-   * マインドを削除する
-   */
-  del_confirm.querySelector('#del-ok').addEventListener("click", delOK);
-  del_confirm.querySelector('#del-ng').addEventListener("click", delNG);
-  del_confirm.querySelector('#close-confirm').addEventListener("click", delNG);
-  function delMindConfirm(subDiv, x, y) {
-    lock();
-    const posX = Math.min(x, foreground.offsetWidth - del_confirm.offsetWidth);
-    const posY = Math.min(y, foreground.offsetHeight - del_confirm.offsetHeight);
-    del_confirm.style.left = `${posX}px`;
-    del_confirm.style.top = `${posY}px`;
-    del_confirm.setAttribute('data-s', subDiv.classList.contains('t-self') ? 1 : 0);
-    del_confirm.setAttribute('data-c', subDiv.classList.contains('t-child') ? 1 : 0);
-    const confDialogSvg = del_confirm.querySelector('#confirm-svg');
-    while(confDialogSvg.firstChild) {
-      confDialogSvg.removeChild(confDialogSvg.firstChild);
-    }
-    confDialogSvg.appendChild(subDiv.querySelector('svg').cloneNode(true));
-    del_confirm.classList.remove('hidden');
-  }
-  function delMindMain(target) {
-    const children = [];
-    const nid = target.getAttribute('id');
-    const pid = target.getAttribute('data-parent');
-    const pMind = foreground.querySelector(`[id=${pid}]`);
-    // 関係の差し替え
-    const childMinds = foreground.querySelectorAll(`[data-parent="${nid}"]`);
-    for (const m of childMinds) {
-      m.setAttribute('data-parent', pid);
-    }
-    background.querySelectorAll(`[id$="-${nid}"]`).forEach(function(line) {
-      line.remove();
-    });
-    background.querySelectorAll(`[id^="${nid}-"]`).forEach(function(line) {
-      const toId = line.getAttribute('id').split('-')[1];
-      line.setAttribute('id', `${pid}-${toId}`);
-      reLine(line, getRelationPoint(pMind, foreground.querySelector(`[id=${toId}]`)));
-    });
-    target.remove();
-  }
-  function delOK() {
-    const mind = foreground.querySelector('.mind.selected');
-    const pid = mind.getAttribute('data-parent');
-    const pMind = (pid) ? foreground.querySelector(`[id=${pid}]`) : null;
-    const nid = mind.getAttribute('id');
-    // 子孫を消す
-    if (del_confirm.getAttribute('data-c') == 1) {
-      let targets = Array.from(foreground.querySelectorAll(`[data-parent="${nid}"]`));
-      while (targets.length > 0) {
-        targets.forEach(function(m) {
-          delMindMain(m);
+        root.style.setProperty('--curtype', 'initial');
+        const targets = foreground.querySelectorAll('.dragging');
+        targets.forEach(function (target) {
+          target.classList.remove('dragging');
         });
-        targets = Array.from(foreground.querySelectorAll(`[data-parent="${nid}"]`));
-      }
-    }
-    // 自分を消す
-    if (del_confirm.getAttribute('data-s') == 1) {
-      delMindMain(mind);
-      pMind.classList.add('selected');
-    }
-    save();
-    closeDelCon();
-  }
-  function delNG() {
-    closeDelCon();
-  }
-  function closeDelCon() {
-    del_confirm.classList.add('hidden');
-    lockRelease();
-  }
+        if (saveFlag) {
+          save(true);
+        }
 
-  /**
-   * save & load function.
-   */
-  function query(request) {
-    return new Promise(function(resolve, reject) {
-      request.onsuccess = function(ev) {
-        resolve(ev.target.result);
+        const delta = ((ev.pageX - clickPos.x) ** 2) + ((ev.pageY - clickPos.y) ** 2);
+        if (delta < 4) {
+          clickAction(ev);
+        }
       }
-      request.onerror = function(ev) {
-        reject(ev);
+      function clickAction(ev) {
+        menuAction(ev.target);
       }
-    });
-  }
-  function save() {
-    const req = indexedDB.open('mindmap', 1); // needless version management for me.
-    req.onupgradeneeded = function(ev) {
-      const db = ev.target.result;
-      const store = db.createObjectStore("savedata", { keyPath: "key" });
-    };
-    req.onsuccess = function(ev) {
-      const db = ev.target.result;
-      const tran = db.transaction(["savedata"], "readwrite");
-      tran.onerror = function(ev) {
-        console.error(ev);
-      };
-      tran.oncomplete = function(ev) {
-        console.log('save ok.');
-      };
-      const store = tran.objectStore("savedata");
-      // get DOM data
-      const lineHTML = JSON.stringify(document.getElementById('lines').innerHTML);
-      const mindHTML = JSON.stringify(document.getElementById('child_minds').innerHTML);
-      const rootMind = document.getElementById('m0');
-      // save data
-      query(store.put({
-        key: 'lines',
-        data: lineHTML,
-      }))
-      .then(query(store.put({
-        key: 'minds',
-        data: mindHTML,
-      })))
-      .then(query(store.put({
-        key: 'root',
-        data: JSON.stringify({
-          class: rootMind.classList.value,
-          style: {top: rootMind.style.top, left: rootMind.style.left},
-          text: rootMind.querySelector('[name="data"]').textContent,
-        }),
-      })))
-      .catch(function(r) {
-        console.error(r);
-      })
-      ;
-    };
-    req.onerror = function(e) {
-      console.error(e);
-    };
-  }
-  function load() {
-    lock();
-    const req = indexedDB.open('mindmap', 1); // needless version management for me.
-    const loadData = {
-      lines: null,
-      minds: null,
-      root: null,
-    };
-    req.onupgradeneeded = function(ev) {
-      const db = ev.target.result;
-      const store = db.createObjectStore("savedata", { keyPath: "key" });
-    };
-    req.onsuccess = function(ev) {
-      const db = ev.target.result;
-      const tran = db.transaction(["savedata"], "readonly");
-      tran.onerror = function(ev) {
-        console.error(ev);
+      /**
+       * メニュー処理
+       */
+      function menuAction(elm) {
+        if (menu.classList.contains('hidden')) {
+          const mind = elm.closest('.mind');
+
+          // メニューが非表示でマインドクリック時はメニュー表示
+          if (mind != null) {
+            // メニュー表示時に画面中央に持ってくる
+            const centerX = window.screenLeft + (document.documentElement.clientWidth / 2);
+            const centerY = window.screenTop + (document.documentElement.clientHeight / 2);
+            const pageX = centerX - (mind.offsetWidth / 2);
+            const pageY = centerY - (mind.offsetHeight / 2);
+            const dx = pageX - mind.offsetLeft;
+            const dy = pageY - mind.offsetTop;
+            foreground.querySelectorAll('.mind').forEach(function (target) {
+              const x = target.offsetLeft + dx;
+              const y = target.offsetTop + dy;
+              target.setAttribute('px', dx);
+              target.setAttribute('py', dy);
+              target.style.left = `${x}px`;
+              target.style.top = `${y}px`;
+              lineReset(target);
+            });
+
+            const moh = menu.offsetHeight;
+            if (moh > mind.offsetTop) {
+              menu.style.top = `${mind.offsetTop + mind.offsetHeight + 1}px`;
+            } else {
+              menu.style.top = `${mind.offsetTop - moh - 1}px`;
+            }
+            const mdl = menu.querySelector('#btn_del');
+            const smts = foreground.querySelectorAll('#subsub .t-self');
+            if (mind.getAttribute('data-parent') == '') {
+              smts.forEach(function (t) {
+                t.classList.add('is-root');
+              });
+            } else {
+              smts.forEach(function (t) {
+                t.classList.remove('is-root');
+              });
+            }
+            menu.style.left = `${mind.offsetLeft}px`;
+            menu.setAttribute('data-trigger', mind.getAttribute('id'));
+            sbmn.classList.add('hidden');
+            menu.classList.remove('hidden');
+          }
+        } else {
+          const mind = foreground.querySelector('.mind.selected');
+          // メニュー表示中はメニューをクリックされたのかそれ以外かで処理を分ける
+          if (elm.classList.contains('menu-btn')) {
+            switch (elm.getAttribute('id')) {
+              case 'btn_del':
+                if (sbmn.classList.contains('hidden')) {
+                  sbmn.style.left = `${menu.offsetLeft}px`;
+                  sbmn.style.top = `${menu.offsetTop + foreground.querySelector('#btn_col').offsetTop}px`;
+                  sbmn.classList.remove('hidden');
+                } else {
+                  sbmn.classList.add('hidden');
+                }
+                break;
+              case 'btn_col':
+                changeColor(mind);
+                break;
+              case 'btn_new':
+                const nMind = newMind(mind);
+                mind.classList.remove('selected');
+                menu.classList.add('hidden');
+                save();
+                menuAction(nMind);
+                break;
+              case 'btn_edt':
+                editMind(mind, menu.offsetLeft + elm.offsetLeft, menu.offsetTop + elm.offsetTop);
+                menu.classList.add('hidden');
+                break;
+            }
+          } else {
+            const subDiv = elm.closest('div.sub-btn');
+            if (subDiv != null) {
+              if (subDiv.classList.contains('is-root')) {
+                return;
+              }
+              delMindConfirm(subDiv, sbmn.offsetLeft, sbmn.offsetTop);
+            } else {
+              // 別のマインドをクリックしている場合は、そこにメニュー表示
+              const evMind = elm.closest('.mind');
+              if (evMind != null && evMind.getAttribute('id') !== menu.getAttribute('data-trigger')) {
+                setTimeout(function () {
+                  menuAction(elm);
+                }, 10);
+              }
+            }
+            sbmn.classList.add('hidden');
+            menu.classList.add('hidden');
+          }
+        }
+      }
+      /**
+       * マインドの色を変える
+       */
+      function changeColor(mind) {
+        let colIdx = 0;
+        for (let i = 0; i < 8; i++) {
+          if (mind.classList.contains(`bg-${i}`)) {
+            mind.classList.remove(`bg-${i}`);
+            colIdx = i;
+            break;
+          }
+        }
+        mind.classList.add(`bg-${(colIdx + 1) % 8}`);
+        save();
+      }
+      /**
+       * 新しいマインドを生み出す
+       */
+      function newMind(mind) {
+        const nMind = mind.cloneNode(true);
+        nMind.setAttribute('id', `m${Date.now()}`);
+        nMind.setAttribute('data-parent', mind.getAttribute('id') ?? '');
+        nMind.style.top = `${Math.floor(menu.offsetTop + (menu.offsetHeight / 2))}px`;
+        nMind.querySelector('[name="data"]').textContent = 'new mind.';
+        foreground.querySelector('#child_minds').appendChild(nMind);
+        liner(mind, nMind);
+        return nMind;
+      }
+
+      /**
+       * 線を引く
+       */
+      function liner(domA, domB) {
+        const pos = getRelationPoint(domA, domB);
+        const newLine = document.getElementById('line_base').cloneNode();
+        newLine.setAttribute('id', `${pos.a.id ?? ''}-${pos.b.id ?? ''}`);
+        reLine(newLine, pos);
+        newLine.classList.remove('hidden');
+        background.querySelector('#lines').appendChild(newLine);
+      }
+      function reLine(line, pos) {
+        line.style.width = `${pos.len}px`;
+        line.style.left = `${pos.a.x}px`;
+        line.style.top = `${pos.a.y}px`;
+        line.style.transform = `rotate(${pos.deg}deg)`;
+      }
+      function lineReset(mind) {
+        const mindId = mind.getAttribute('id');
+        background.querySelectorAll(`[id$="-${mindId}"]`).forEach(function (line) {
+          const fromId = line.getAttribute('id').split('-')[0];
+          reLine(line, getRelationPoint(foreground.querySelector(`[id=${fromId}]`), mind));
+        });
+        background.querySelectorAll(`[id^="${mindId}-"]`).forEach(function (line) {
+          const toId = line.getAttribute('id').split('-')[1];
+          reLine(line, getRelationPoint(mind, foreground.querySelector(`[id=${toId}]`)));
+        });
+      }
+      /**
+       * ２つのDOMの中心点と、引数１のDOMから引数２のDOMへの角度と距離を取得する
+       */
+      function getRelationPoint(domA, domB) {
+        const a = {
+          x: domA.offsetLeft + (domA.offsetWidth / 2),
+          y: domA.offsetTop + (domA.offsetHeight / 2),
+          id: domA.getAttribute('id'),
+        };
+        const b = {
+          x: domB.offsetLeft + (domB.offsetWidth / 2),
+          y: domB.offsetTop + (domB.offsetHeight / 2),
+          id: domB.getAttribute('id'),
+        };
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dd = Math.sqrt((dx ** 2) + (dy ** 2));
+        let deg = Math.acos(dx / dd) * 180 / Math.PI;
+        if (dy < 0) {
+          deg = 360 - deg;
+        }
+        return { a: a, b: b, deg: deg, len: dd };
+      }
+
+      /**
+       * マインド編集
+       */
+      input_dialog.querySelector('.mind-tbox').addEventListener("focus", function () {
+        this.select();
+      });
+      function editMind(mind, x, y) {
+        lock();
+        const text_box = input_dialog.querySelector('.mind-tbox');
+        text_box.value = mind.querySelector('[name="data"]').textContent;
+        /*
+        const posX = Math.min(x, foreground.offsetWidth - input_dialog.offsetWidth);
+        const posY = Math.min(y, foreground.offsetHeight - input_dialog.offsetHeight);
+        */
+        const posX = 0;
+        const posY = (document.documentElement.clientHeight - input_dialog.clientHeight) / 2;
+        input_dialog.style.left = `${posX}px`;
+        input_dialog.style.top = `${posY}px`;
+        input_dialog.classList.remove('hidden');
+      }
+      function closeEditMind() {
+        input_dialog.classList.add('hidden');
         lockRelease();
-      };
-      tran.oncomplete = function(ev) {
-        console.log('load ok.');
-        if (loadData.lines != null) {
-          document.getElementById('lines').innerHTML = loadData.lines;
+      }
+      input_dialog.querySelector('#close-edit').addEventListener("click", closeEditMind);
+      function submitMind(ev) {
+        ev.preventDefault();
+        const mind = foreground.querySelector('.selected');
+        const text = input_dialog.querySelector('.mind-tbox').value;
+        mind.querySelector('[name="data"]').textContent = (text != '') ? text : '(´・ω・｀)';
+        save();
+        closeEditMind();
+      }
+      input_dialog.querySelector('form').addEventListener("submit", submitMind);
+      function lock() {
+        lock_screen.classList.remove('hidden');
+      }
+      function lockRelease(ev) {
+        lock_screen.classList.add('hidden');
+      }
+
+      /**
+       * マインドを削除する
+       */
+      del_confirm.querySelector('#del-ok').addEventListener("click", delOK);
+      del_confirm.querySelector('#del-ng').addEventListener("click", delNG);
+      del_confirm.querySelector('#close-confirm').addEventListener("click", delNG);
+      function delMindConfirm(subDiv, x, y) {
+        lock();
+        const posX = Math.min(x, foreground.offsetWidth - del_confirm.offsetWidth);
+        const posY = Math.min(y, foreground.offsetHeight - del_confirm.offsetHeight);
+        del_confirm.style.left = `${posX}px`;
+        del_confirm.style.top = `${posY}px`;
+        del_confirm.setAttribute('data-s', subDiv.classList.contains('t-self') ? 1 : 0);
+        del_confirm.setAttribute('data-c', subDiv.classList.contains('t-child') ? 1 : 0);
+        const confDialogSvg = del_confirm.querySelector('#confirm-svg');
+        while (confDialogSvg.firstChild) {
+          confDialogSvg.removeChild(confDialogSvg.firstChild);
         }
-        if (loadData.lines != null) {
-          document.getElementById('child_minds').innerHTML = loadData.minds;
+        confDialogSvg.appendChild(subDiv.querySelector('svg').cloneNode(true));
+        del_confirm.classList.remove('hidden');
+      }
+      function delMindMain(target) {
+        const children = [];
+        const nid = target.getAttribute('id');
+        const pid = target.getAttribute('data-parent');
+        const pMind = foreground.querySelector(`[id=${pid}]`);
+        // 関係の差し替え
+        const childMinds = foreground.querySelectorAll(`[data-parent="${nid}"]`);
+        for (const m of childMinds) {
+          m.setAttribute('data-parent', pid);
         }
-        if (loadData.root != null) {
+        background.querySelectorAll(`[id$="-${nid}"]`).forEach(function (line) {
+          line.remove();
+        });
+        background.querySelectorAll(`[id^="${nid}-"]`).forEach(function (line) {
+          const toId = line.getAttribute('id').split('-')[1];
+          line.setAttribute('id', `${pid}-${toId}`);
+          reLine(line, getRelationPoint(pMind, foreground.querySelector(`[id=${toId}]`)));
+        });
+        target.remove();
+      }
+      function delOK() {
+        const mind = foreground.querySelector('.mind.selected');
+        const pid = mind.getAttribute('data-parent');
+        const pMind = (pid) ? foreground.querySelector(`[id=${pid}]`) : null;
+        const nid = mind.getAttribute('id');
+        // 子孫を消す
+        if (del_confirm.getAttribute('data-c') == 1) {
+          let targets = Array.from(foreground.querySelectorAll(`[data-parent="${nid}"]`));
+          while (targets.length > 0) {
+            targets.forEach(function (m) {
+              delMindMain(m);
+            });
+            targets = Array.from(foreground.querySelectorAll(`[data-parent="${nid}"]`));
+          }
+        }
+        // 自分を消す
+        if (del_confirm.getAttribute('data-s') == 1) {
+          delMindMain(mind);
+          pMind.classList.add('selected');
+        }
+        save();
+        closeDelCon();
+      }
+      function delNG() {
+        closeDelCon();
+      }
+      function closeDelCon() {
+        del_confirm.classList.add('hidden');
+        lockRelease();
+      }
+
+      /**
+       * save & load function.
+       */
+      function query(request) {
+        return new Promise(function (resolve, reject) {
+          request.onsuccess = function (ev) {
+            resolve(ev.target.result);
+          }
+          request.onerror = function (ev) {
+            reject(ev);
+          }
+        });
+      }
+      function save() {
+        const req = indexedDB.open('mindmap', 1); // needless version management for me.
+        req.onupgradeneeded = function (ev) {
+          const db = ev.target.result;
+          const store = db.createObjectStore("savedata", { keyPath: "key" });
+        };
+        req.onsuccess = function (ev) {
+          const db = ev.target.result;
+          const tran = db.transaction(["savedata"], "readwrite");
+          tran.onerror = function (ev) {
+            console.error(ev);
+          };
+          tran.oncomplete = function (ev) {
+            console.log('save ok.');
+          };
+          const store = tran.objectStore("savedata");
+          // get DOM data
+          const lineHTML = JSON.stringify(document.getElementById('lines').innerHTML);
+          const mindHTML = JSON.stringify(document.getElementById('child_minds').innerHTML);
           const rootMind = document.getElementById('m0');
-          rootMind.style.top = loadData.root.style.top;
-          rootMind.style.left = loadData.root.style.left;
-          loadData.root.class.split(' ').forEach(function(c) {
-            rootMind.classList.add(c);
-          });
-          rootMind.querySelector('[name="data"]').textContent = loadData.root.text;
-        }
-        setTimeout(function() {
+          // save data
+          query(store.put({
+            key: 'lines',
+            data: lineHTML,
+          }))
+            .then(query(store.put({
+              key: 'minds',
+              data: mindHTML,
+            })))
+            .then(query(store.put({
+              key: 'root',
+              data: JSON.stringify({
+                class: rootMind.classList.value,
+                style: { top: rootMind.style.top, left: rootMind.style.left },
+                text: rootMind.querySelector('[name="data"]').textContent,
+              }),
+            })))
+            .catch(function (r) {
+              console.error(r);
+            })
+            ;
+        };
+        req.onerror = function (e) {
+          console.error(e);
+        };
+      }
+      function load() {
+        lock();
+        const req = indexedDB.open('mindmap', 1); // needless version management for me.
+        const loadData = {
+          lines: null,
+          minds: null,
+          root: null,
+        };
+        req.onupgradeneeded = function (ev) {
+          const db = ev.target.result;
+          const store = db.createObjectStore("savedata", { keyPath: "key" });
+        };
+        req.onsuccess = function (ev) {
+          const db = ev.target.result;
+          const tran = db.transaction(["savedata"], "readonly");
+          tran.onerror = function (ev) {
+            console.error(ev);
+            lockRelease();
+          };
+          tran.oncomplete = function (ev) {
+            console.log('load ok.');
+            if (loadData.lines != null) {
+              document.getElementById('lines').innerHTML = loadData.lines;
+            }
+            if (loadData.lines != null) {
+              document.getElementById('child_minds').innerHTML = loadData.minds;
+            }
+            if (loadData.root != null) {
+              const rootMind = document.getElementById('m0');
+              rootMind.style.top = loadData.root.style.top;
+              rootMind.style.left = loadData.root.style.left;
+              loadData.root.class.split(' ').forEach(function (c) {
+                rootMind.classList.add(c);
+              });
+              rootMind.querySelector('[name="data"]').textContent = loadData.root.text;
+            }
+            setTimeout(function () {
+              lockRelease();
+            }, 500);
+          };
+          const store = tran.objectStore("savedata");
+          // load data
+          query(store.get('lines'))
+            .then(function (res) {
+              if (res != null) {
+                loadData.lines = JSON.parse(res.data);
+              }
+              return query(store.get('minds'));
+            })
+            .then(function (res) {
+              if (res != null) {
+                loadData.minds = JSON.parse(res.data);
+              }
+              return query(store.get('root'));
+            })
+            .then(function (res) {
+              if (res != null) {
+                loadData.root = JSON.parse(res.data);
+              }
+              return Promise.resolve();
+            })
+            .catch(function (r) {
+              console.error(r);
+            })
+            ;
+        };
+        req.onerror = function (e) {
+          console.error(e);
           lockRelease();
-        },500);
-      };
-      const store = tran.objectStore("savedata");
-      // load data
-      query(store.get('lines'))
-      .then(function(res) {
-        if (res != null) {
-          loadData.lines = JSON.parse(res.data);
-        }
-        return query(store.get('minds'));
-      })
-      .then(function(res) {
-        if (res != null) {
-          loadData.minds = JSON.parse(res.data);
-        }
-        return query(store.get('root'));
-      })
-      .then(function(res) {
-        if (res != null) {
-          loadData.root = JSON.parse(res.data);
-        }
-        return Promise.resolve();
-      })
-      .catch(function(r) {
-        console.error(r);
-      })
-      ;
-    };
-    req.onerror = function(e) {
-      console.error(e);
-      lockRelease();
-    };
-  }
-  load();
-})();
-</script>
+        };
+      }
+      load();
+    })();
+  </script>
 </body>
+
 </html>
